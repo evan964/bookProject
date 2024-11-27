@@ -5,10 +5,10 @@ A Python scraper for extracting book information from Goodreads.
 ## Installation
 
 1. Clone this repository
-2. Create a virtual environment: 
+2. Create a virtual environment:
 
-python -m venv venv
-source venv/bin/activate # On Windows: venv\Scripts\activate
-
-
-pip install -r requirements.txt
+```sh
+$ python -m venv venv
+$ source venv/bin/activate # On Windows: venv\Scripts\activate
+$ pip install -r requirements.txt
+```
