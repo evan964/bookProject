@@ -1,20 +1,23 @@
+from reviews import BookReview
+
+
 class Author:
     """Represents an author of a book"""
     def __init__(self, name: str, url: str):
         self.name = name
         self.url = url
-    
+
     def __repr__(self):
         return f"Author(name='{self.name}', url='{self.url}')"
 
 class Book:
     """Represents a book with its details"""
     def __init__(
-        self, 
-        title: str, 
-        authors: list, 
-        rating: float = None, 
-        ratings_count: int = None, 
+        self,
+        title: str,
+        authors: list,
+        rating: float = None,
+        ratings_count: int = None,
         reviews_count: int = None,
         description: str = None,
         genres: list = None,
@@ -34,6 +37,8 @@ class Book:
         self.publication_date = publication_date
         self.isbn = isbn
         self.language = language
+
+        self.reviews = list[BookReview]()
 
     def __repr__(self):
         return f"Book(title='{self.title}', authors={self.authors})"
