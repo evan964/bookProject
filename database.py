@@ -59,6 +59,17 @@ def create_tables():
     )
     ''')
 
+    # Create Reviews table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Reviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        book_id INTEGER,
+        rating INTEGER,
+        text TEXT,
+        FOREIGN KEY (book_id) REFERENCES Books (id)
+    )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -85,6 +96,12 @@ def insert_book(book_data):
         cursor.execute('SELECT id FROM Genres WHERE name = ?', (genre,))
         genre_id = cursor.fetchone()[0]
         cursor.execute('INSERT INTO BookGenres (book_id, genre_id) VALUES (?, ?)', (book_id, genre_id))
+
+    for review in book_data.reviews:
+        cursor.execute('''
+        INSERT INTO Reviews (book_id, rating, text)
+        VALUES (?, ?, ?)
+        ''', (book_id, review.rating, review.text))
 
     conn.commit()
     conn.close() 

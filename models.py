@@ -25,7 +25,8 @@ class Book:
         pages: int = None,
         publication_date: str = None,
         isbn: str = None,
-        language: str = None
+        language: str = None,
+        reviews: list = None
     ):
         self.title = title
         self.authors = authors
@@ -39,8 +40,7 @@ class Book:
         self.publication_date = publication_date
         self.isbn = isbn
         self.language = language
-
-        self.reviews = list[BookReview]()
+        self.reviews = reviews or []
 
     def __repr__(self):
         return f"Book(title='{self.title}', authors={self.authors})"
