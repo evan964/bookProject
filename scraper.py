@@ -126,6 +126,7 @@ class GoodreadsScraper:
         book_data = {
             'title': title,
             'authors': self._extract_authors(soup),
+            'book_url': book_url,
             'description': description,
             'genres': self._extract_genres(soup),
             **self._extract_rating_info(soup),

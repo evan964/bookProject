@@ -16,6 +16,7 @@ class Book:
         self,
         title: str,
         authors: list,
+        book_url: str,
         rating: float = None,
         ratings_count: int = None,
         reviews_count: int = None,
@@ -28,6 +29,7 @@ class Book:
     ):
         self.title = title
         self.authors = authors
+        self.book_url = book_url
         self.rating = rating
         self.ratings_count = ratings_count
         self.reviews_count = reviews_count
