@@ -15,7 +15,7 @@ class GoodreadsScraper:
     async def _make_request(self, url: str) -> BeautifulSoup:
         """Make HTTP request and return BeautifulSoup object"""
         try:
-            response = await clients.goodreads.get(url)
+            response = await clients.goodreads_reg.get(url)
             response.raise_for_status()
             return BeautifulSoup(response.text, 'html.parser')
         except requests.RequestException as e:
