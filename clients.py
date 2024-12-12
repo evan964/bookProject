@@ -11,7 +11,7 @@ T = TypeVar('T')
 
 @dataclass(kw_only=True, slots=True)
 class Client(Generic[T]):
-  func: Callable[[httpx.AsyncClient, T], Awaitable[httpx.Response]] = field(default=(lambda client, url: client.get(url)), repr=False)
+  func: Callable[[httpx.AsyncClient, T], Awaitable[httpx.Response]] = field(default=(lambda client, url: client.get(url, timeout=10.0)), repr=False)
   delay: float
   headers: dict[str, str] = field(default_factory=dict)
 
@@ -29,7 +29,13 @@ class Client(Generic[T]):
         last_start_time = time.time()
 
         url, future = await self._queue.get()
-        future.set_result(await self.func(client, url))
+
+        try:
+          result = await self.func(client, url)
+        except Exception as e:
+          future.set_exception(e)
+        else:
+          future.set_result(result)
 
         current_time = time.time()
         await asyncio.sleep(max(self.delay - (current_time - last_start_time), 0))
@@ -59,7 +65,7 @@ goodreads_reg = Client(delay=1.0, headers={
 goodreads_api = Client(delay=1.0, headers={
   'User-Agent': user_agent,
   'x-api-key': 'da2-xpgsdydkbregjhpr6ejzqdhuwy',
-}, func=(lambda client, data: client.post('https://kxbwmqov6jgg3daaamb744ycu4.appsync-api.us-east-1.amazonaws.com/graphql', json=data)))
+}, func=(lambda client, data: client.post('https://kxbwmqov6jgg3daaamb744ycu4.appsync-api.us-east-1.amazonaws.com/graphql', json=data, timeout=10.0)))
 
 google_books_api = Client(delay=0.5, headers={
   'User-Agent': user_agent,
