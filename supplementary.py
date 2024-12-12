@@ -1,7 +1,7 @@
 import urllib.parse
 from dataclasses import dataclass
 
-import requests
+import clients
 from bs4 import BeautifulSoup
 from models import Book
 
@@ -22,7 +22,7 @@ def to_isbn10(raw_isbn: str, /):
   return raw_isbn[3:] if len(raw_isbn) == 13 else raw_isbn
 
 
-def query_supplementary(book: Book):
+async def query_supplementary(book: Book):
   # Query the Google Books API
 
   if book.isbn is not None:
@@ -30,7 +30,7 @@ def query_supplementary(book: Book):
   else:
     query = f'intitle:{book.title}'
 
-  response = requests.get(f'https://www.googleapis.com/books/v1/volumes?q={urllib.parse.quote_plus(query)}')
+  response = await clients.google_books_api.get(f'https://www.googleapis.com/books/v1/volumes?q={urllib.parse.quote_plus(query)}')
   data = response.json()
 
   if not data['items']:
@@ -41,7 +41,7 @@ def query_supplementary(book: Book):
 
   # Scrape Google Books
 
-  response = requests.get(f'https://books.google.fr/books?id={book_id}&sitesec=buy')
+  response = await clients.google_books_reg.get(f'https://books.google.fr/books?id={book_id}&sitesec=buy')
   soup = BeautifulSoup(response.text, 'html.parser')
 
   link = soup.select_one('#summary_content > span > a')
@@ -56,10 +56,7 @@ def query_supplementary(book: Book):
 
   # Scrape WorldCat
 
-  response = requests.get(f'https://search.worldcat.org/api/search-item/{oclc_number}', headers={
-    # Necessary
-    "Referer": "https://search.worldcat.org",
-  })
+  response = await clients.worldcat.get(f'https://search.worldcat.org/api/search-item/{oclc_number}')
 
   data = response.json()
 

@@ -4,6 +4,7 @@ import json
 from bs4 import BeautifulSoup
 from typing import Dict, List, Optional, Union
 
+import clients
 from exceptions import GoodreadsScraperException
 from models import Author, Book
 from utils import extract_text, extract_number
@@ -11,17 +12,10 @@ from utils import extract_text, extract_number
 class GoodreadsScraper:
     BASE_URL = "https://www.goodreads.com"
 
-    def __init__(self):
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Referer': 'https://www.google.com/',
-        }
-
-    def _make_request(self, url: str) -> BeautifulSoup:
+    async def _make_request(self, url: str) -> BeautifulSoup:
         """Make HTTP request and return BeautifulSoup object"""
         try:
-            response = requests.get(url, headers=self.headers)
+            response = await clients.goodreads.get(url)
             response.raise_for_status()
             return BeautifulSoup(response.text, 'html.parser')
         except requests.RequestException as e:
@@ -115,9 +109,9 @@ class GoodreadsScraper:
             'language': language
         }
 
-    def scrape_book(self, book_url: str) -> Book:
+    async def scrape_book(self, book_url: str) -> Book:
         """Main method to scrape book information"""
-        soup = self._make_request(book_url)
+        soup = await self._make_request(book_url)
 
         title = extract_text(soup.find('h1', {'data-testid': 'bookTitle'}))
         description = self._extract_description(soup)
