@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import Optional, Sequence
 
-import clients
+from . import clients
 
 
 def get_legacy_id_from_url(url: str):

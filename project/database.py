@@ -1,7 +1,7 @@
 import sqlite3
 
-from models import Book
-from supplementary import SupplementaryBookInfo
+from .models import Book
+from .supplementary import SupplementaryBookInfo
 
 
 def create_tables():

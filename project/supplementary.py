@@ -2,9 +2,10 @@ import urllib.parse
 from dataclasses import dataclass, field
 from typing import Optional
 
-import clients
 from bs4 import BeautifulSoup
-from models import Book
+
+from . import clients
+from .models import Book
 
 
 @dataclass(slots=True)

@@ -2,7 +2,7 @@ import asyncio
 from asyncio import Event, Future
 from collections import deque
 from dataclasses import KW_ONLY, dataclass, field
-from typing import Any, Awaitable, Callable, Generic, Optional, TypeVar
+from typing import Awaitable, Callable, Generic, Optional, TypeVar
 
 
 T = TypeVar('T')

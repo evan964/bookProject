@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from reviews import BookReview
-
 
 @dataclass(slots=True)
 class Author:

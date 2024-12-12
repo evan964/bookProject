@@ -1,21 +1,20 @@
 # main.py
 import asyncio
-from contextlib import AsyncExitStack
 import contextlib
 import json
-from pathlib import Path
-from pprint import pprint
 import sqlite3
+from contextlib import AsyncExitStack
+from pathlib import Path
 
-import clients
 import pandas as pd
-from async_util import BatchQueue
-from database import create_tables, insert_book
-from exceptions import GoodreadsScraperException
-from reviews import BookReview, fetch_reviews
-from scraper import GoodreadsScraper
-from supplementary import query_supplementary
 from tqdm import tqdm
+
+from . import clients
+from .async_util import BatchQueue
+from .database import create_tables, insert_book
+from .reviews import fetch_reviews
+from .scraper import GoodreadsScraper
+from .supplementary import query_supplementary
 
 
 async def main():
@@ -35,7 +34,7 @@ async def run_scraping():
     df = pd.read_csv('books_list.csv', sep=';')
 
     # Take only the first 3 rows from the DataFrame
-    df = df.head(35)
+    df = df.head(75)
 
     conn = sqlite3.connect('books.db')
     semaphore = asyncio.Semaphore(15)
@@ -69,7 +68,7 @@ async def run_scraping():
 
                         progress.update(1)
                         # print(f"Scraped {book_data.title}")
-                    except GoodreadsScraperException as e:
+                    except Exception as e:
                         print(f"Scraping Error for {book_url}: {e}")
                         # Continue with next book if current one fails
 

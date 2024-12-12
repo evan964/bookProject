@@ -1,13 +1,15 @@
-import requests
-import re
 import json
-from bs4 import BeautifulSoup
+import re
 from typing import Dict, List, Optional, Union
 
-import clients
-from exceptions import GoodreadsScraperException
-from models import Author, Book
-from utils import extract_text, extract_number
+import requests
+from bs4 import BeautifulSoup
+
+from . import clients
+from .exceptions import GoodreadsScraperException
+from .models import Author, Book
+from .utils import extract_number, extract_text
+
 
 class GoodreadsScraper:
     BASE_URL = "https://www.goodreads.com"
