@@ -2,7 +2,7 @@ import functools
 import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
-from typing import Sequence
+from typing import Optional, Sequence
 
 import clients
 
@@ -15,8 +15,6 @@ def get_legacy_id_from_url(url: str):
 
 
 async def fetch_reviews(urls: Sequence[str]):
-    print('->', urls)
-
     response = await clients.goodreads_api.get(dict(
         query='''
 fragment X on Book {
@@ -27,7 +25,7 @@ fragment X on Book {
         ratingsCount
     }
     work {
-        reviews(pagination:  { limit: 10 }) {
+        reviews(pagination:  { limit: 20 }) {
             edges {
                 node {
                     text
@@ -43,8 +41,6 @@ query {
     ''' + '\n'.join([f'a{index}: getBookByLegacyId(legacyId: {get_legacy_id_from_url(url)}) {{ ...X }}' for index, url in enumerate(urls)]) + '\n}'
     ))
 
-    print(response)
-
     data = response.json()['data']
 
     def get_review(index: int):
@@ -58,7 +54,7 @@ query {
 @dataclass(slots=True)
 class BookReview:
     rating: int
-    text: str
+    text: Optional[str]
 
 def process_review(data: dict):
     review_text = get_review_parser().run(data['text'])
@@ -66,7 +62,7 @@ def process_review(data: dict):
 
     return BookReview(
         rating=data['rating'],
-        text=review_text,
+        text=(review_text or None),
     )
 
 

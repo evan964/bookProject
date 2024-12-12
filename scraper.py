@@ -28,7 +28,7 @@ class GoodreadsScraper:
         if contributors_section:
             for contributor in contributors_section.find_all('a', class_='ContributorLink'):
                 name = extract_text(contributor.find('span', class_='ContributorLink__name'))
-                url = f"{self.BASE_URL}{contributor['href']}"
+                url = f"{contributor['href']}"
                 authors.append(Author(name=name, url=url))
         return authors
 

@@ -69,7 +69,7 @@ google_books_reg = Client(delay=1.0, headers={
   'User-Agent': user_agent,
 })
 
-worldcat = Client(delay=4.0, headers={
+worldcat = Client(delay=5.0, headers={
   'Referer': 'https://search.worldcat.org',
   'User-Agent': user_agent,
 })

@@ -1,7 +1,11 @@
 # main.py
 import asyncio
 from contextlib import AsyncExitStack
+import contextlib
+import json
+from pathlib import Path
 from pprint import pprint
+import sqlite3
 
 import clients
 import pandas as pd
@@ -15,7 +19,7 @@ from tqdm import tqdm
 
 
 async def main():
-    # create_tables()  # Create the database tables
+    create_tables()  # Create the database tables
 
     async with AsyncExitStack() as stack:
         for client in clients.clients:
@@ -31,38 +35,54 @@ async def run_scraping():
     df = pd.read_csv('books_list.csv', sep=';')
 
     # Take only the first 3 rows from the DataFrame
-    df = df.head(3)
+    df = df.head(35)
 
+    conn = sqlite3.connect('books.db')
     semaphore = asyncio.Semaphore(15)
 
+    completed_urls_path = Path('completed_urls.txt')
 
-    async def fetch_book(row):
-        book_url = "https://" + row['link']
+    if completed_urls_path.exists():
+        with completed_urls_path.open('r') as file:
+            completed_urls = set(json.load(file))
+    else:
+        completed_urls = set[str]()
 
-        try:
-            book_data = await scraper.scrape_book(book_url)
-            # book_data.reviews = reviews_by_url[row['link']]
+    all_urls = set(df['link'])
+    target_urls = all_urls - completed_urls
 
-            print(book_data)
+    try:
+        with tqdm(initial=len(completed_urls), total=len(all_urls)) as progress:
+            with contextlib.closing(conn):
+                async def fetch_book(target_url):
+                    book_url = "https://" + target_url
 
-            # Insert book data into the database
-            # pprint(await query_supplementary(book_data))
-            print(await review_queue.push(row['link']))
-            print()
+                    try:
+                        book_data = await scraper.scrape_book(book_url)
+                        book_data.reviews = await review_queue.push(target_url)
+                        supplementary = await query_supplementary(book_data)
 
-            # insert_book(book_data)
-        except GoodreadsScraperException as e:
-            print(f"Scraping Error for {book_url}: {e}")
-            # Continue with next book if current one fails
+                        # Insert book data into the database
+                        insert_book(conn, book_data, supplementary)
+
+                        completed_urls.add(target_url)
+
+                        progress.update(1)
+                        # print(f"Scraped {book_data.title}")
+                    except GoodreadsScraperException as e:
+                        print(f"Scraping Error for {book_url}: {e}")
+                        # Continue with next book if current one fails
 
 
-    async with BatchQueue[str, list[BookReview]](fetch_reviews) as review_queue:
-        async with asyncio.TaskGroup() as group:
-            # Iterate through each row in the DataFrame
-            for _, row in tqdm(df.iterrows(), total=len(df)):
-                async with semaphore:
-                    group.create_task(fetch_book(row))
-
+                async with BatchQueue(fetch_reviews) as review_queue:
+                    async with asyncio.TaskGroup() as group:
+                        # Iterate through each row in the DataFrame
+                        for target_url in target_urls:
+                            async with semaphore:
+                                group.create_task(fetch_book(target_url))
+    finally:
+        with completed_urls_path.open('w') as file:
+            json.dump(list(completed_urls), file, indent=2)
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -1,5 +1,6 @@
 import urllib.parse
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Optional
 
 import clients
 from bs4 import BeautifulSoup
@@ -8,14 +9,14 @@ from models import Book
 
 @dataclass(slots=True)
 class DigitalAccess:
-  platform: str
+  platform: Optional[str]
   url: str
 
 @dataclass(kw_only=True, slots=True)
 class SupplementaryBookInfo:
-  digital_accesses: list[DigitalAccess]
-  oclc_number: str
-  isbns: list[str]
+  digital_accesses: list[DigitalAccess] = field(default_factory=list)
+  oclc_number: Optional[str] = None
+  isbns: set[str] = field(default_factory=set)
 
 
 def to_isbn10(raw_isbn: str, /):
@@ -33,8 +34,8 @@ async def query_supplementary(book: Book):
   response = await clients.google_books_api.get(f'https://www.googleapis.com/books/v1/volumes?q={urllib.parse.quote_plus(query)}')
   data = response.json()
 
-  if not data['items']:
-    return None
+  if not data.get('items'):
+    return SupplementaryBookInfo()
 
   book_id = data['items'][0]['id']
 
@@ -45,10 +46,19 @@ async def query_supplementary(book: Book):
   soup = BeautifulSoup(response.text, 'html.parser')
 
   link = soup.select_one('#summary_content > span > a')
+
+  if link is None:
+    return SupplementaryBookInfo()
+
   href = link.attrs['href'] # type: ignore
 
   marker = 'http://worldcat.org/oclc/'
-  start_index = href.index(marker) + len(marker)
+  marker_index = href.find(marker)
+
+  if marker_index < 0:
+    return SupplementaryBookInfo()
+
+  start_index = marker_index + len(marker)
   end_index = href.index('&', start_index)
 
   oclc_number = href[start_index:end_index]
@@ -61,7 +71,7 @@ async def query_supplementary(book: Book):
   data = response.json()
 
   return SupplementaryBookInfo(
-    digital_accesses=[DigitalAccess(platform=access['materialSpecified'], url=access['uri']) for access in (data['digitalAccessAndLocations'] or [])],
+    digital_accesses=[DigitalAccess(platform=access.get('materialSpecified'), url=access['uri']) for access in (data['digitalAccessAndLocations'] or [])],
     oclc_number=oclc_number,
-    isbns=[to_isbn10(isbn) for isbn in data['isbns']],
+    isbns={to_isbn10(isbn) for isbn in data.get('isbns') or []},
   )
