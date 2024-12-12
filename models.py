@@ -1,14 +1,14 @@
+from dataclasses import dataclass
+from typing import Optional
+
 from reviews import BookReview
 
 
+@dataclass(slots=True)
 class Author:
     """Represents an author of a book"""
-    def __init__(self, name: str, url: str):
-        self.name = name
-        self.url = url
-
-    def __repr__(self):
-        return f"Author(name='{self.name}', url='{self.url}')"
+    name: str
+    url: str
 
 class Book:
     """Represents a book with its details"""
@@ -24,8 +24,8 @@ class Book:
         genres: list = None,
         pages: int = None,
         publication_date: str = None,
-        isbn: str = None,
-        language: str = None,
+        isbn: Optional[str] = None,
+        language: Optional[str] = None,
         reviews: list = None
     ):
         self.title = title

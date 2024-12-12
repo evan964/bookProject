@@ -1,8 +1,9 @@
+import urllib.parse
 from dataclasses import dataclass
-from pprint import pprint
 
 import requests
 from bs4 import BeautifulSoup
+from models import Book
 
 
 @dataclass(slots=True)
@@ -10,9 +11,9 @@ class DigitalAccess:
   platform: str
   url: str
 
-@dataclass(slots=True)
+@dataclass(kw_only=True, slots=True)
 class SupplementaryBookInfo:
-  digital_access: list[DigitalAccess]
+  digital_accesses: list[DigitalAccess]
   oclc_number: str
   isbns: list[str]
 
@@ -21,17 +22,21 @@ def to_isbn10(raw_isbn: str, /):
   return raw_isbn[3:] if len(raw_isbn) == 13 else raw_isbn
 
 
-def query_supplementary(isbn: str):
+def query_supplementary(book: Book):
   # Query the Google Books API
 
-  response = requests.get(f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}')
+  if book.isbn is not None:
+    query = f'isbn:{book.isbn}'
+  else:
+    query = f'intitle:{book.title}'
+
+  response = requests.get(f'https://www.googleapis.com/books/v1/volumes?q={urllib.parse.quote_plus(query)}')
   data = response.json()
 
   if not data['items']:
     return None
 
   book_id = data['items'][0]['id']
-  # return GoogleBooksInfo(id=data['items'][0]['id'])
 
 
   # Scrape Google Books
@@ -59,11 +64,7 @@ def query_supplementary(isbn: str):
   data = response.json()
 
   return SupplementaryBookInfo(
-    digital_access=[DigitalAccess(platform=access['materialSpecified'], url=access['uri']) for access in data['digitalAccessAndLocations']],
+    digital_accesses=[DigitalAccess(platform=access['materialSpecified'], url=access['uri']) for access in (data['digitalAccessAndLocations'] or [])],
     oclc_number=oclc_number,
     isbns=[to_isbn10(isbn) for isbn in data['isbns']],
   )
-
-
-if __name__ == '__main__':
-  pprint(query_supplementary('9781429522823'))

@@ -27,9 +27,9 @@ class GoodreadsScraper:
         except requests.RequestException as e:
             raise GoodreadsScraperException(f"Failed to fetch page: {str(e)}")
 
-    def _extract_authors(self, soup: BeautifulSoup) -> List[Author]:
+    def _extract_authors(self, soup: BeautifulSoup) -> list[Author]:
         """Extract book authors"""
-        authors = []
+        authors = list[Author]()
         contributors_section = soup.find('div', class_='BookPageMetadataSection__contributor')
         if contributors_section:
             for contributor in contributors_section.find_all('a', class_='ContributorLink'):
@@ -52,10 +52,10 @@ class GoodreadsScraper:
         if meta_section:
             ratings_count_elem = meta_section.find('span', {'data-testid': 'ratingsCount'})
             reviews_count_elem = meta_section.find('span', {'data-testid': 'reviewsCount'})
-            
+
             if ratings_count_elem:
                 ratings_count = extract_number(extract_text(ratings_count_elem))
-            
+
             if reviews_count_elem:
                 reviews_count = extract_number(extract_text(reviews_count_elem))
 
@@ -96,32 +96,32 @@ class GoodreadsScraper:
             'publication_date': publication_date
         }
 
-    def _extract_isbn_and_language(self, soup: BeautifulSoup) -> Dict[str, str]:
+    def _extract_isbn_and_language(self, soup: BeautifulSoup) -> dict[str, Optional[str]]:
         """Extract ISBN and language from JSON-LD metadata"""
-        isbn = 'N/A'
-        language = 'N/A'
-        
         json_ld_script = soup.find('script', type='application/ld+json')
         if json_ld_script:
             try:
                 json_data = json.loads(json_ld_script.string)
-                isbn = json_data.get('isbn', 'N/A')
-                language = json_data.get('inLanguage', 'N/A')
+                isbn = json_data.get('isbn')
+                language = json_data.get('inLanguage')
             except json.JSONDecodeError:
                 raise GoodreadsScraperException("Failed to parse JSON-LD data")
+        else:
+            isbn = None
+            language = None
 
         return {
-            'isbn': isbn, 
+            'isbn': isbn,
             'language': language
         }
 
     def scrape_book(self, book_url: str) -> Book:
         """Main method to scrape book information"""
         soup = self._make_request(book_url)
-        
+
         title = extract_text(soup.find('h1', {'data-testid': 'bookTitle'}))
         description = self._extract_description(soup)
-        
+
         # Combine all extracted information
         book_data = {
             'title': title,
@@ -133,7 +133,7 @@ class GoodreadsScraper:
             **self._extract_publication_info(soup),
             **self._extract_isbn_and_language(soup)
         }
-        
+
         return Book(**book_data)
 
     def _extract_description(self, soup: BeautifulSoup) -> str:
