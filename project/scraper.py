@@ -2,7 +2,7 @@ import json
 import re
 from typing import Dict, List, Optional, Union
 
-import requests
+import httpx
 from bs4 import BeautifulSoup
 
 from . import clients
@@ -20,7 +20,7 @@ class GoodreadsScraper:
             response = await clients.goodreads_reg.get(url)
             response.raise_for_status()
             return BeautifulSoup(response.text, 'html.parser')
-        except requests.RequestException as e:
+        except httpx.RequestError as e:
             raise GoodreadsScraperException(f"Failed to fetch page: {str(e)}")
 
     def _extract_authors(self, soup: BeautifulSoup) -> list[Author]:

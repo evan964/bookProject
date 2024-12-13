@@ -46,6 +46,10 @@ query {
     def get_review(index: int):
         book_data = data[f'a{index}']
         # average_rating = book_data['stats']['averageRating']
+
+        if (book_data is None) or (book_data['work'] is None) or (book_data['work']['reviews'] is None):
+            return []
+
         return [process_review(review_data['node']) for review_data in book_data['work']['reviews']['edges']]
 
     return [get_review(index) for index in range(len(urls))]

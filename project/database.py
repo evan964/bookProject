@@ -13,12 +13,12 @@ def create_tables():
     CREATE TABLE IF NOT EXISTS Books (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
-        rating REAL NOT NULL,
+        rating REAL,
         ratings_count INTEGER NOT NULL,
         review_count INTEGER NOT NULL,
         description TEXT NOT NULL,
         publication_date TEXT NOT NULL,
-        language TEXT NOT NULL,
+        language TEXT,
         url TEXT NOT NULL,
         oclc_number TEXT
     )
@@ -101,7 +101,7 @@ def insert_book(conn: sqlite3.Connection, book_data: Book, supplementary: Supple
     INSERT INTO Books (title, rating, ratings_count, review_count, description, publication_date, language, url, oclc_number)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (book_data.title, book_data.rating, book_data.ratings_count, book_data.reviews_count,
-          book_data.description, book_data.publication_date, book_data.language, book_data.book_url, supplementary.oclc_number))
+          book_data.description, book_data.publication_date, book_data.language or 'Unknown', book_data.book_url, supplementary.oclc_number))
 
     book_id = cursor.lastrowid
 

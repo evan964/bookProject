@@ -34,7 +34,7 @@ async def run_scraping():
     df = pd.read_csv('books_list.csv', sep=';')
 
     # Take only the first 3 rows from the DataFrame
-    df = df.head(75)
+    # df = df.head(75)
 
     conn = sqlite3.connect('books.db')
     semaphore = asyncio.Semaphore(15)
